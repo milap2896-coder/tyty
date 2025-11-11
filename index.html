@@ -1,0 +1,296 @@
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhai+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+<div id="custom-orgchart-wrapper">
+  <div id="orgChart"></div>
+
+  <div id="orgModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-inner">
+        <div class="modal-left">
+          <img id="modalPhoto" alt="Foto" />
+          <h3 id="modalName"></h3>
+          <p id="modalRole"></p>
+        </div>
+        <div class="modal-right">
+          <p id="modalDesc"></p>
+        </div>
+      </div>
+      <button class="close-btn" id="closeModal">Cerrar</button>
+    </div>
+  </div>  
+</div>
+
+<style>
+  #custom-orgchart-wrapper {
+    padding: 20px;
+    font-family: 'Baloo Bhai 2';
+    text-align: center;
+  }
+  #orgChart {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+  }
+  .tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    animation: fadeIn 0.5s ease;
+  }
+  .node {
+    padding: 18px;
+    width: 100px;
+    height: 180px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+    max-width: 90px;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  .node:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.25);
+  }
+  .node img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid rgba(255,255,255,0.6);
+  }
+  .node h3 {
+    margin: 5px 0 2px;
+    font-size: 16px;
+  }
+  .node p {
+    margin: 0;
+    font-size: 14px;
+  }
+  .change-Lider {
+    background: linear-gradient(90deg, #112c63, #3b5998);
+  }
+  .change-Partner {
+    background: linear-gradient(90deg, #00b1e2, #603ecc);
+  }
+  .node:hover::after {
+    content: attr(data-desc);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #603ecc;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeTooltip 0.3s forwards;
+  }
+  @keyframes fadeTooltip {
+    to { opacity: 1; }
+  }
+  .children {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 25px;
+    justify-content: center;
+    margin-top: 30px;
+    position: relative;
+    background: #f3f4f6; /* gris suave */
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+  }
+  @media (max-width: 1024px) {
+    .children { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .children { grid-template-columns: repeat(2, 1fr); }
+  }
+  .children::before {
+    content: "";
+    position: absolute;
+    top: -15px;
+    left: calc(50% - 40%);
+    width: 80%;
+    height: 2px;
+    background-color: #cbd5e1;
+  }
+  .branch {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .tree::before {
+    content: "";
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    width: 2px;
+    height: 30px;
+    background-color: #cbd5e1;
+    transform: translateX(-50%);
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background-color: #53565a;
+    color: white;
+    margin: auto;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 12px;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+    border: 10px solid #55d6be;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .modal-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+  }
+  .modal-left {
+    flex: 1;
+    text-align: center;
+    padding-right: 15px;
+    border-right: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  .modal-right {
+    flex: 1;
+    padding-left: 15px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .modal-content img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+    border-radius: 0%;
+    object-fit: cover;
+  }
+  .modal-content h3 {
+    font-size: 22px;
+    margin-bottom: 5px;
+  }
+  .modal-content p {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  .close-btn {
+    background: #c8226a;
+    color: #d9d9d6;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 14px;
+  }
+  .close-btn:hover {
+    background: #dc2626;
+  }
+</style>
+
+<script>
+  const orgData = [
+    { id: 1, name: "P", role: "", parent: null, photo: "", card_change:"Lider", desc:"fdfdf" },
+    { id: 12, name: "A", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 15, name: "A", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 11, name: "A", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 2, name: "M", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 3, name: "M", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 4, name: "M", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 5, name: "R", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 6, name: "G", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 7, name: "M", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 8, name: "D", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 9, name: "G", role: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"fnkdbgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgvgnvklllllllllllbkllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll" },
+    { id: 10, name: "F", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 13, name: "F", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+    { id: 14, name: "F", role: "", parent: 1, photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"Partner", desc:"" },
+  ];
+
+  const modal = document.getElementById("orgModal");
+  const modalPhoto = document.getElementById("modalPhoto");
+  const modalName = document.getElementById("modalName");
+  const modalRole = document.getElementById("modalRole");
+  const modalDesc = document.getElementById("modalDesc");
+  const closeModal = document.getElementById("closeModal");
+
+  function renderChart() {
+    const chart = document.querySelector("#orgChart");
+    chart.innerHTML = "";
+    orgData.filter(p => !p.parent).forEach(root => chart.appendChild(createTree(root)));
+  }
+
+  function createTree(person) {
+    const container = document.createElement("div");
+    container.className = "tree";
+    const node = document.createElement("div");
+    node.className = "node change-" + person.card_change;
+    node.setAttribute("data-desc", "Press me for more information.");
+    const img = document.createElement("img");
+    img.src = person.photo;
+    const name = document.createElement("h3");
+    name.textContent = person.name;
+    const role = document.createElement("p");
+    role.textContent = person.role;
+    node.append(img, name, role);
+    node.addEventListener("click", () => openModal(person));
+    container.appendChild(node);
+
+    const children = orgData.filter(p => p.parent == person.id);
+    if (children.length > 0) {
+      const childContainer = document.createElement("div");
+      childContainer.className = "children";
+      children.forEach(c => {
+        const branch = document.createElement("div");
+        branch.className = "branch";
+        branch.appendChild(createTree(c));
+        childContainer.appendChild(branch);
+      });
+      container.appendChild(childContainer);
+    }
+    return container;
+  }
+
+  function openModal(person) {
+    modalPhoto.src = person.photo;
+    modalName.textContent = person.name;
+    modalRole.textContent = person.role;
+    modalDesc.textContent = person.desc;
+    modal.style.display = "flex";
+  }
+
+  closeModal.addEventListener("click", () => { modal.style.display = "none"; });
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+
+  renderChart();
+</script>
