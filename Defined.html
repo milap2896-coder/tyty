@@ -1,0 +1,399 @@
+<div id="orgchart-shadow"></div>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhai+2:wght@400;500;600;700&display=swap"rel="stylesheet">
+
+<script>
+  class OrgChartShadow extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({ mode: "open" });
+
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `
+        <style>
+          #custom-orgchart-wrapper {
+            padding: 20px;
+            font-family: 'Baloo Bhai 2';
+            text-align: center;
+          }
+
+          #orgChart {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+          }
+
+          .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+            overflow: visible !important;
+          }
+
+          .tree:first-child {
+            align-items: center;
+          }
+
+          .node {
+            padding: 20px;
+            border-radius: 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            color: #fff;
+            font-weight: 500;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            margin-bottom: 12px;
+            height: 250px;
+            max-width: 150px;
+            white-space: normal;                                                                                                                                                                                                              
+            word-wrap: break-word;
+            display: inline-block;
+          }
+
+          .node-leader {
+            background: linear-gradient(90deg, #112c63, #3b5998);
+            width: 140px !important;
+            min-height: 190px !important;
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border: 3px solid #ffffff60;
+          }
+
+          .change-Partner {
+            background: linear-gradient(90deg, #00b1e2, #603ecc);
+          }
+
+          .node:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+          }
+
+          .node img {
+            width: 100%;
+            height: 60%;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1px;
+            transition: transform 0.3s ease;
+          }
+
+          .node h3 { margin: 5px 0 2px; font-size: 16px; }
+          .node p { margin: 0; font-size: 14px; }
+
+          .node:hover::after {
+            content: attr(data-desc);
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #603ecc;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+            opacity: 0;
+            animation: fadeTooltip 0.3s forwards;
+          }
+
+          @keyframes fadeTooltip { to { opacity: 1; } }
+
+          .children {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 25px;
+            justify-content: center;
+            margin-top: 30px;
+            position: relative;
+          }
+
+          @media (max-width: 1024px) {
+            .children { grid-template-columns: repeat(3, 1fr); }
+          }
+
+          @media (max-width: 600px) {
+            .children { grid-template-columns: repeat(2, 1fr); }
+          }
+
+          .children::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background-color: rgba(151, 153, 155, 0.9);
+          }
+
+          .branch {
+            position: relative;
+            display: flex;
+            justify-content: center;
+          }
+
+          .tree::before {
+            content: "";
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            width: 2px;
+            height: 30px;
+            background-color: #cbd5e1;
+            transform: translateX(-50%);
+          }
+
+          
+          .node-group {
+            border: 3px solid rgba(0, 177, 226, 0.6);
+            border-radius: 18px;
+            background: rgba(85, 214, 190, 0.6);
+            padding: 30px 20px;
+            margin-top: 25px;
+            display: inline-flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+          }
+
+          .node-group::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 3px;
+            height: 20px;
+            background-color: rgba(85, 214, 190, 0.7) ;
+            transform: translateX(-50%);
+          }
+
+          .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;    
+          }
+
+          .modal-content {
+            background-color: #21314d;
+            color: white;
+            margin: auto ;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 14px;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+            border: 10px solid #55d6be;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Baloo Bhai 2';
+          }
+
+          .modal-inner {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+            width: 100%;
+          }
+
+          .modal-left {
+            flex: 1;
+            text-align: center;
+            align-items: left;
+            padding-right: 15px;
+            border-right: 3px solid rgba(255, 255, 255, 0.5);           
+          }
+
+          .modal-right { 
+            flex: 1; 
+            padding-left: 15px; 
+            font-size: 16px; 
+            line-height: 1.5; 
+            margin: auto;
+            text-align: center;
+            padding-left: 1px;
+            text-align: justify;
+          }
+
+          .modal-content img {
+            width: 300px;
+            height: 300px;
+            margin-bottom: 10px;
+            border-radius: 0%;
+            object-fit: cover;
+          }
+
+          .modal-content h3 {
+            font-size: 22px;
+            margin-bottom: 5px;
+          }
+
+          .modal-content p {
+            font-size: 16px;
+            margin-bottom: 15px;
+          }
+
+          .close-btn {
+            background: #c8226a;
+            color: #d9d9d6;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+          }
+
+          .close-btn:hover {
+            background: #dc2626;
+          }
+        </style>
+
+        <div id="custom-orgchart-wrapper">
+          <div id="orgChart"></div>
+        </div>
+
+        <div id="orgModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-inner">
+              <div class="modal-left">
+                <img id="modalPhoto" alt="Foto" />
+                <h3 id="modalName"></h3>
+                <p id="modalRole"></p>
+              </div>
+              <div class="modal-right">
+                <p id="modalDesc"></p>
+              </div>
+            </div>
+            <button class="close-btn" id="closeModal">Cerrar</button>
+          </div>
+        </div>
+      `;
+
+      shadow.appendChild(wrapper);
+
+      const orgData = [/* They are 2 kind of card_change: 1 of them is "Lider" and the other is "partner", this is to keep an order*/
+        { id: 1, name: "Pablo Gomez", role: "Supervisor, Business Intelligence & Analytics", unit: "I'm part of the team at Business Excellence", parent: null, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Pablo%20Gomez.png", card_change:"Lider", desc:"Accomplished, enthusiastic, energetic, tested and proven Operations Manager, Global Quality, Compliance & Operational Excellence Manager, Business Intelligence Manager, Project Manager and/or Sr. Process Engineer, with a solid history in process improvement and vast number of quality and compliance achievements, having multiple company certifications in Quality and Lean Six Sigma. With over 25 years of experience in Manufacturing and Share Service Centers, I am analytical, structure problem solver, business-minded and a data driven manager, who believes in the power of “YES WE CAN”, enjoys collaborating, innovating, transforming, evolving and teaching others to do the things right, from the very first time, and when no one sees." },
+
+        { id: 12, name: "Aaron Granados", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Lenovo", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Aaron%20Granados.png", card_change:"Partner", desc:"Business Intelligence Analyst with over 20 years of professional experience across multiple industries including tourism, hospitality, customer service, sales, and technical support. Over the past 12 years at Lenovo, I have developed deep expertise in data analysis, visualization, and business intelligence, with a strong understanding of Lenovo’s operations and the distribution channel ecosystem. Currently focused on providing specialized support in strategic initiatives in collaboration with upper management, while continuing to expand my leadership and strategic impact through my development plan." },
+
+        { id: 15, name: "Alejandro Sandi",  role: "Business Intelligence Analyst I", unit: "I'm part of the team in Human Resources/ Finance", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Alejandro%20Sandi.png", card_change:"Partner", desc:"Chemical Engineer with a background and experience in data analysis and process optimizations. Passionate about transforming complex data into insights that enhance efficiency and business growth." },
+
+        { id: 11, name: "Andres Felipe Arias", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Finance and HR", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Andres%20Felipe.png", card_change:"Partner", desc:"Data-driven decision maker with 9+ years of experience in business intelligence, specializing in strategic BI reporting, KPI management, and advanced analytics for compliance and market insights. Skilled in Power BI, Power Apps, Power Automate, Python, SQL, Tableau, AWS, SAP, and Oracle. <br> Experienced in automation and process improvement using the Power Platform, RPAs and Python integrating Waterfall and Scrum frameworks to boost efficiency, collaboration, and data-driven innovation." },
+
+        { id: 8, name: "Daniel Chavarria",role:"Business Intelligence Analyst II", unit: "I'm part of the team at LGE", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Daniel%20Chavarria.png", card_change:"Partner", desc:"Experienced Business Intelligence Analyst II with expertise in data analysis, reporting, and visualization to enhance business performance. Skilled in modern BI platforms, data integration processes, and automation solutions to turn complex information into actionable insights. Recognized for being genuine, approachable, and dependable, bringing upbeat energy and a collaborative mindset to optimize workflows and support strategic initiatives" },
+
+        { id: 13, name: "Fabiana Mora", role: "Business Intelligence Analyst I ", unit: "I'm part of the team at Lenovo. ", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Fabiana%20Mora.png", card_change:"Partner", desc:"Analyst I with experience in data analytics and business intelligence, passionate about turning data into actionable insights. Skilled in R, Power BI, and data visualization to drive efficiency and continuous improvement. Focused on creating real impact through data-driven analysis and innovation." },
+
+        { id: 10, name: "Felipe Quiros", role: "Business Intelligence Analyst II", unit: "I'm part of the team at Samsung Mobility", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Felipe%20Quiros.png", card_change:"Partner", desc:"Experienced data analyst with a data-driven mindset. Skilled in PowerBi, Excel." },
+
+        { id: 14, name: "Fernando Oviedo", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Lenovo", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Fernando%20Oviedo.png", card_change:"Partner", desc:"Experienced engineer with a strong competence in data science and analytics. Skilled in Python, Data Science, AI, SQL, and PowerBI, with expertise in process engineering and data analytics. Committed to leveraging my engineering background and data-driven mindset to drive insights and solutions for complex challenges in the field of data science" },
+
+        { id: 6, name: "Gabriel Quesada",  role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at CMS", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Gabriel%20Quesada.png", card_change:"Partner", desc:"Data engineer and BI developer with expertise in SQL, Python and cloud databases. Professional at designing efficient data models, optimizing performance, and automating workflows that improve business agility. Focused on creating reliable, maintainable, and insightful solutions that empower data-driven decision-making, driven by curiosity and precision." },
+
+        { id: 9, name: "Gilbert Marin",  role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at CMS", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Gilbert%20Marin.png", card_change:"Partner", desc:"Versatile data professional with comprehensive expertise spanning analytics, engineering and development. Proficient in Python, R and SQL, with hands-on experience in cloud data platforms (Snowflake) and visualization tools(Power BI, Tableau, Knime). Combines strong mathematical foundations with practical knowledge of machine learning models, data engineering pipelines, and advances analytics. Additionally skilled as a full-stack developer in React JS and React Native with Power Platform capabilities. Passionate about transforming complex data challenges into actionable insights and scalable solutions that drive business value." },
+
+        { id: 7, name: "Maria Villareal", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Extreme Networks", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Maria%20Villarreal.png", card_change:"Partner", desc:"Experienced data and business intelligence professional with over 14 years of expertise in customer service, data analysis, and process optimization across multiple industries. Skilled in SQL Server, Python, Artificial Intelligence, Power BI, Power Apps, and Microsoft Excel for data manipulation and visualization. Adept at designing interactive dashboards, building custom applications, and delivering actionable insights. Committed to collaborating with stakeholders to develop high-quality, data-driven solutions that meet business objectives and drive performance." },
+
+        { id: 3, name: "Mario Barrantes", role: "Business Intelligence Analyst I", unit: "I'm part of the team at AWS", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Mario%20Barrantes.png", card_change:"Partner", desc:"Industrial Production Engineer and Business Intelligence Analyst with solid expertise in data analytics, process improvement, and agile project management. Proficient in Power BI, Power Apps, Power Automate, and Dynamics 365, integrating complex data sources to drive strategic insights and efficiency. <br> Certified Lean Six Sigma Green Belt, Scrum Master, Product Owner, Artificial Intelligence, and Machine Learning, with proven experience in multinational environments such as TD SYNNEX, Walmart, BAC Credomatic, Bayer, and Abbott. <br> Recognized for combining analytical rigor, business acumen, and agile leadership to deliver data-driven solutions and continuous improvement across global operations." },
+
+        { id: 2, name: "Marvin Abarca", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Samsung", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Marvin%20Abarca.png", card_change:"Partner", desc:"Senior business analyst experienced in Data Analytics, Certified Data Scientist with 5+ years of experience in design and development of business intelligence solutions optimization and continuous improvement for cross-functional teams in APAC, EMEA and America. Skilled in Python, SQL, Power Platform, Tableau, Alteryx, Spotfire, Dataiku among other ETL and BI tools." },
+      
+        { id: 4, name: "Michael Leon", role: "Sr. Business Intelligence Analyst", unit: "I'm part of the team at Sony PDS", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Michael%20Leon.png", card_change:"Partner", desc:"Data and Analytics Professional with over three years of experience in reporting, data engineering, and automation. Proficient in Microsoft Fabric, Power BI, Power Automate, SQL, Excel, and Oracle. Experienced in both the development and operational support of analytical solutions, with a focus on process optimization and data-driven decision-making. With a foundation in Business Management, I leverage technical expertise and analytical insight to deliver effective, value-driven solutions." },
+
+        { id: 5, name: "Richard Morales", role: "Business Intelligence Analyst II", unit: " I'm part of the team at Dell", parent: 1, photo: "https://tdworldwide.sharepoint.com/sites/BusinessExcellencePortal/SiteAssets/Photos/Richard_Morales.png", card_change:"Partner", desc:"Data driven and service oriented profesional, Skilled in Power Platform including Power BI, Power Query, Power Apps, Power Automate and more of the Microsoft environment. Committed to help enable success through my business intelligence and analysis services." }
+  
+        /*{ id: , name: "", date: "",role: "", unit: "", parent: , photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", card_change:"", desc:"" }*/
+      ]; /* They are 2 kind of card_change: 1 of them is "Lider" and the other is "partner", this is to keep an order*/
+
+      const modal = shadow.getElementById("orgModal");
+      const modalPhoto = shadow.getElementById("modalPhoto");
+      const modalName = shadow.getElementById("modalName");
+      const modalRole = shadow.getElementById("modalRole");
+      const modalDesc = shadow.getElementById("modalDesc");
+      const closeModal = shadow.getElementById("closeModal");
+
+      function renderChart() {
+        const chart = wrapper.querySelector("#orgChart");
+        chart.innerHTML = "";
+        orgData.filter(p => !p.parent).forEach(root => chart.appendChild(createTree(root)));
+      }
+
+      function createTree(person) {
+        const container = document.createElement("div");
+        container.className = "tree";
+
+        const node = document.createElement("div");
+        node.className = "node change-" + person.card_change + (person.id === 1 ? " node-leader" : "");
+        node.setAttribute("data-desc", "Click for more info");
+
+        const img = document.createElement("img");
+        img.src = person.photo;
+        const name = document.createElement("h3");
+        name.textContent = person.name;
+        const role = document.createElement("p");
+        role.textContent = person.role;
+
+        node.append(img, name, role);
+        node.addEventListener("click", () => openModal(person));
+
+        container.appendChild(node);
+
+        const children = orgData.filter(p => p.parent == person.id);
+        if (children.length > 0) {
+          const groupWrapper = document.createElement("div");
+          groupWrapper.className = "node-group";
+
+          const childContainer = document.createElement("div");
+          childContainer.className = "children";
+
+          children.forEach(c => {
+            const branch = document.createElement("div");
+            branch.className = "branch";
+            branch.appendChild(createTree(c));
+            childContainer.appendChild(branch);
+          });
+
+          groupWrapper.appendChild(childContainer);
+          container.appendChild(groupWrapper);
+        }
+
+        return container;
+      }
+
+      function openModal(person) {
+        modalPhoto.src = person.photo;
+        modalName.textContent = person.name;
+        modalRole.textContent = person.role;
+        modalDesc.textContent = person.desc;
+        modal.style.display = "flex";
+      }
+
+      closeModal.addEventListener("click", () => modal.style.display = "none");
+      modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = "none"; });
+
+      renderChart();
+    }
+  }
+
+  customElements.define("orgchart-shadow", OrgChartShadow);
+  document.getElementById("orgchart-shadow").appendChild(document.createElement("orgchart-shadow"));
+</script>
